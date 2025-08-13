@@ -1,0 +1,32 @@
+{
+  "name": "martin-socialmedia-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "test": "jest",
+    "start:prod": "node src/main.js",
+    "start:dev": "nodemon src/main.js",
+    "db:seed": "node src/commands/seed.command.js"
+  },
+  "author": "martin somto",
+  "license": "ISC",
+  "dependencies": {
+    "argon2": "^0.43.1",
+    "compression": "^1.8.1",
+    "config": "^4.1.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "joi": "^18.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "logger": "^0.0.1",
+    "mongoose": "^8.17.0",
+    "morgan": "^1.10.1",
+    "nodemon": "^3.1.10",
+    "socket.io": "^4.8.1"
+  }
+}
