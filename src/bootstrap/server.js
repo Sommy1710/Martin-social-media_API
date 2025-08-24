@@ -16,6 +16,7 @@ import { Server } from 'socket.io';
 import { commentRouter } from '../routes/comment.js';
 
 
+
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
@@ -24,6 +25,7 @@ const io = new Server(server, {
         methods: ["GET", "POST"]
     }
 });
+
 
 app.use(cors());
 app.use(compression());

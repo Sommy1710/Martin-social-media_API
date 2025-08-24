@@ -109,3 +109,21 @@ export const toggleLike = async (req, res) => {
         res.status(500).json({error: error.message});
     }
 };
+
+export const searchTweets = asyncHandler(async (req, res) => {
+    const {keyword} = req.query;
+
+    if (!keyword) {
+        return res.status(400).json({success: false, message: 'keyword is required'});
+    }
+
+    const tweets = await Tweet.find({
+        content: {$regex: keyword, $options: 'i'} // this is for case-insensitive search
+    }).populate('author', 'username'); // this includes username in response
+
+    return res.status(200).json({
+        success: true,
+        message: 'Matching tweets found',
+        data: tweets
+    });
+});

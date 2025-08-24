@@ -5,6 +5,7 @@ import { CreateUserRequest } from '../requests/create-user.request.js';
 import {ValidationError} from "../../lib/error-definitions.js"
 import { AuthUserRequest } from '../requests/auth-user.request.js';
 import config from '../../config/app.config.js';
+import { User } from '../schema/user.schema.js';
 
 
 
@@ -66,4 +67,22 @@ export const logoutUser = asyncHandler(async (req, res) => {
   });
 
   return res.status(200).json({ success: true, message: 'User successfully logged out' });
+});
+
+export const searchUsers = asyncHandler(async (req, res) => {
+  const { keyword } = req.query;
+
+  if (!keyword) {
+    return res.status(400).json({ success: false, message: "Keyword is required" });
+  }
+
+  const users = await User.find({
+    username: { $regex: keyword, $options: 'i' } // case-insensitive search
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: 'Matching users found',
+    data: users
+  });
 });
