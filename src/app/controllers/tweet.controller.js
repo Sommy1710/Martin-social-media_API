@@ -4,8 +4,9 @@ import {Validator} from './../../lib/validator.js';
 import { CreateTweetRequest } from '../requests/create-tweet.request.js';
 import { ValidationError } from '../../lib/error-definitions.js';
 import { Tweet } from '../schema/tweet.schema.js';
+import { v2 as cloudinary } from 'cloudinary';
 
-export const createNewTweet = asyncHandler(async(req, res) =>
+/*export const createNewTweet = asyncHandler(async(req, res) =>
 {
     const validator = new Validator();
     const {errors, value} = validator.validate(CreateTweetRequest, req.body);
@@ -18,6 +19,39 @@ export const createNewTweet = asyncHandler(async(req, res) =>
         message: 'new tweet created'
     })
 
+});*/
+export const createNewTweet = asyncHandler(async (req, res) => {
+  const validator = new Validator();
+  const { errors, value } = validator.validate(CreateTweetRequest, req.body);
+  if (errors) throw new ValidationError('The request failed with the following errors', errors);
+
+  let photoUrls = [];
+
+  if (req.files && req.files.length > 0) {
+    const uploadPromises = req.files.map(file => {
+      return new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream({ resource_type: 'image' }, (error, result) => {
+          if (error) return reject(error);
+          resolve(result.secure_url);
+        }).end(file.buffer);
+      });
+    });
+
+    photoUrls = await Promise.all(uploadPromises);
+  }
+
+  const tweetPayload = {
+    ...value,
+    photos: photoUrls // Attach uploaded photo URLs to the tweet
+  };
+
+  await tweetService.createTweet(tweetPayload);
+
+  return res.status(201).json({
+    success: true,
+    message: 'New tweet created',
+    photos: photoUrls
+  });
 });
 
 export const fetchAllTweets = asyncHandler(async(req, res) =>

@@ -1,10 +1,12 @@
 import {Router} from 'express';
 import authMiddleware from '../app/middleware/auth.middleware.js';
-import { createNewTweet, deleteSingleTweet, fetchAllTweets, fetchTweet, updateSingleTweet, toggleLike } from '../app/controllers/tweet.controller.js';
+import { createNewTweet, deleteSingleTweet, fetchAllTweets, fetchTweet, updateSingleTweet, toggleLike, searchTweets } from '../app/controllers/tweet.controller.js';
+import { uploadMultiplePhotos } from '../app/controllers/upload.js';
 const router = Router();
 
 router.get('/', authMiddleware, fetchAllTweets);
-router.post('/', authMiddleware,  createNewTweet);
+router.post('/', authMiddleware, uploadMultiplePhotos,  createNewTweet);
+router.get('/search', authMiddleware, searchTweets)
 router.get('/:id', authMiddleware, fetchTweet);
 router.put('/:id', authMiddleware, updateSingleTweet);
 router.delete('/:id', authMiddleware, deleteSingleTweet);

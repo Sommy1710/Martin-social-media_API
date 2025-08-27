@@ -21,6 +21,7 @@ const UserSchema = new Schema ({
     bio: {
         type: String
     },
+    profilePhoto: {type: String, default: ''},
     followers: [{type: mongoose.Schema.Types.ObjectId, ref: "User"}],
     following: [{type: mongoose.Schema.Types.ObjectId, ref: "User"}],
     role: {

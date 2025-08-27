@@ -6,10 +6,11 @@ import {ValidationError} from "../../lib/error-definitions.js"
 import { AuthUserRequest } from '../requests/auth-user.request.js';
 import config from '../../config/app.config.js';
 import { User } from '../schema/user.schema.js';
+import { v2 as cloudinary } from 'cloudinary';
 
 
 
-export const createUserAccount = asyncHandler(async (req, res) => {
+/*export const createUserAccount = asyncHandler(async (req, res) => {
     const validator = new Validator();
 
     const {value, errors} = validator.validate(CreateUserRequest, req.body);
@@ -30,7 +31,54 @@ export const createUserAccount = asyncHandler(async (req, res) => {
         success: true,
         message: 'user registered successfully',
     })
-})
+})*/
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+export const createUserAccount = asyncHandler(async (req, res) => {
+  const validator = new Validator();
+  const { value, errors } = validator.validate(CreateUserRequest, req.body);
+
+  if (errors) {
+    throw new ValidationError(
+      'The request failed with the following errors',
+      errors
+    );
+  }
+
+  let profilePhotoUrl = '';
+
+  // Handle image upload with a Promise
+  if (req.file) {
+    profilePhotoUrl = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        { resource_type: 'image' },
+        (error, result) => {
+          if (error) return reject(new Error('Image upload failed'));
+          resolve(result.secure_url);
+        }
+      );
+      uploadStream.end(req.file.buffer);
+    });
+  }
+
+  //Merge validated data with profile photo
+  const userData = {
+    ...value,
+    profilePhoto: profilePhotoUrl,
+  };
+
+  await authService.registerUser(userData);
+
+  return res.status(201).json({
+    success: true,
+    message: 'User registered successfully!',
+  });
+});
 
 export const authenticateUser = asyncHandler(async (req, res) => 
 {
@@ -76,9 +124,11 @@ export const searchUsers = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: "Keyword is required" });
   }
 
-  const users = await User.find({
-    username: { $regex: keyword, $options: 'i' } // case-insensitive search
-  });
+  const users = await User.find(
+    { username: { $regex: keyword, $options: 'i' } },
+    { password: 0, role: 0, email: 0 }, // this exclude password email and role field
+  
+  );
 
   return res.status(200).json({
     success: true,

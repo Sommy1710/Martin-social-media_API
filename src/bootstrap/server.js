@@ -14,6 +14,7 @@ import { tweetRouter } from '../routes/tweets.js';
 import { messageRouter } from '../routes/message.js';
 import { Server } from 'socket.io';
 import { commentRouter } from '../routes/comment.js';
+import { uploadRouter } from '../routes/upload.js';
 
 
 
@@ -54,6 +55,7 @@ app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/tweets', tweetRouter);
 app.use('/api/v1/messages', messageRouter);
 app.use('/api/v1/comments', commentRouter);
+app.use('/api/v1/upload', uploadRouter);
 
 // socket.IO logic
 io.on("connection", (socket) => {
