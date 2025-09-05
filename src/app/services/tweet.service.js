@@ -5,8 +5,21 @@ export const createTweet = async (payload) => {
     return await Tweet.create(payload);
 };
 
-export const getTweet = async (payload) => {
+/*export const getTweet = async (payload) => {
     return (payload) ? await aggregateResults(Tweet, payload) : await Tweet.find()
+};*/
+export const getTweet = async (payload = {}) => {
+  return await Tweet.find(payload)
+    .populate({
+      path: 'comments',
+      select: 'content author createdAt',
+      populate: {
+        path: 'author',
+        select: 'username'
+      }
+    })
+    .populate('author', 'username')
+    .sort({ createdAt: -1 });
 };
 
 export const getTweets = async (id) => {

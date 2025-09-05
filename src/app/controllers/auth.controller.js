@@ -136,3 +136,29 @@ export const searchUsers = asyncHandler(async (req, res) => {
     data: users
   });
 });
+
+export const deleteProfilePhoto = asyncHandler(async (req, res) => {
+  const userId = req.user_id;
+
+  const user = await User.findById(userId);
+  if (!user){
+    return res.status(404).json({success: false, message: 'No profile photo to delete'});
+  }
+  const publicIdMatch = user.profilePhoto.match(/\/([^\/]+)\.[a-z]+$/);
+  const publicId = publicIdMatch ? publicIdMatch[1] : null;
+
+  if (publicId) {
+    try {
+      await cloudinary.uploader.destroy(publicId, {resource_type: 'image'});
+
+    } catch (err) {
+      return res.status(500).json({success: false, message: 'failed to delete profile photo'});
+    }
+  }
+  user.profilePhoto = '';
+  await user.save();
+  return res.status(200).json({
+    success: true,
+    message: 'profile photo deleted successfully'
+  });
+});

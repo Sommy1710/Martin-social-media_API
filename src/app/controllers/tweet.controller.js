@@ -5,6 +5,7 @@ import { CreateTweetRequest } from '../requests/create-tweet.request.js';
 import { ValidationError } from '../../lib/error-definitions.js';
 import { Tweet } from '../schema/tweet.schema.js';
 import { v2 as cloudinary } from 'cloudinary';
+import { NotFoundError, UnauthenticatedError } from '../../lib/error-definitions.js';
 
 /*export const createNewTweet = asyncHandler(async(req, res) =>
 {
@@ -21,12 +22,9 @@ import { v2 as cloudinary } from 'cloudinary';
 
 });*/
 export const createNewTweet = asyncHandler(async (req, res) => {
-  const validator = new Validator();
-  const { errors, value } = validator.validate(CreateTweetRequest, req.body);
-  if (errors) throw new ValidationError('The request failed with the following errors', errors);
-
   let photoUrls = [];
 
+  // Upload photos first
   if (req.files && req.files.length > 0) {
     const uploadPromises = req.files.map(file => {
       return new Promise((resolve, reject) => {
@@ -38,11 +36,16 @@ export const createNewTweet = asyncHandler(async (req, res) => {
     });
 
     photoUrls = await Promise.all(uploadPromises);
+    req.body.photos = photoUrls; // Inject URLs into body before validation
   }
+
+  const validator = new Validator();
+  const { errors, value } = validator.validate(CreateTweetRequest, req.body);
+  if (errors) throw new ValidationError('The request failed with the following errors', errors);
 
   const tweetPayload = {
     ...value,
-    photos: photoUrls // Attach uploaded photo URLs to the tweet
+    photos: photoUrls
   };
 
   await tweetService.createTweet(tweetPayload);
@@ -53,7 +56,6 @@ export const createNewTweet = asyncHandler(async (req, res) => {
     photos: photoUrls
   });
 });
-
 export const fetchAllTweets = asyncHandler(async(req, res) =>
 {
     const tweets = Object.entries(req.query).length >= 1
@@ -85,7 +87,7 @@ export const fetchTweet = asyncHandler(async(req, res) =>
 
 });
 
-export const updateSingleTweet = asyncHandler(async(req, res) =>
+/*export const updateSingleTweet = asyncHandler(async(req, res) =>
 {
     const {id} = req.params;
     const validator = new Validator()
@@ -98,15 +100,37 @@ export const updateSingleTweet = asyncHandler(async(req, res) =>
         success: true,
         message: "tweet updated"
     });
-});
+});*/
 
-export const deleteSingleTweet = asyncHandler(async(req, res) =>
+/*export const deleteSingleTweet = asyncHandler(async(req, res) =>
 {
     const {id} = req.params;
     await tweetService.deleteTweet(id);
     return res.json({
         success: true,
         message: "tweet deleted"
+    });
+});*/
+
+export const deleteSingleTweet = asyncHandler(async (req, res) => {
+    const {id} = req.params;
+
+    //fetch the tweet you want to delete
+    const tweet = await tweetService.getTweets(id);
+    if (!tweet) {
+        throw new NotFoundError('Tweet not found');
+    }
+    //check if the authenticated user is the author
+    if (tweet.author.toString() !== req.user.id) {
+        throw new UnauthenticatedError('you are not authorized to delete this tweet');
+    }
+
+    //pr;oceed with deletion
+    await tweetService.deleteTweet(id);
+
+    return res.json({
+        success: true,
+        message: 'Tweet deleted'
     });
 });
 

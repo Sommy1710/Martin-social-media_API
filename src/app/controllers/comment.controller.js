@@ -2,6 +2,7 @@ import { commentRequest } from './../requests/create-comment.request.js';
 import {Comment} from '../schema/comment.schema.js';
 import { Validator } from "../../lib/validator.js";
 import { Tweet } from '../schema/tweet.schema.js';
+import { UnauthenticatedError } from '../../lib/error-definitions.js';
 
 export const addCommentToTweet = async (req, res, next) => {
     try {
@@ -56,6 +57,10 @@ export const deleteComment = async(req, res, next) => {
         const comment = await Comment.findById(commentId);
         if (!comment) {
             return res.status(404).json({error: 'Comment not found'});
+        }
+        //check if the authenticated user is the comment owner
+        if (comment.author.toString() !== req.user.id) {
+            throw new UnauthenticatedError('you are not authorized to delete this comment')
         }
         //remove comment reference from tweet
         tweet.comments = tweet.comments.filter(

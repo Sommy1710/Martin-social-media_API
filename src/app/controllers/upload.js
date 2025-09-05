@@ -18,8 +18,8 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({ storage, fileFilter });
 
-export const uploadSinglePhoto = upload.single('image'); // For profile photo
-export const uploadMultiplePhotos = upload.array('images', 10); // For tweets
+export const uploadSinglePhoto = upload.single('profilePhoto'); // For profile photo
+export const uploadMultiplePhotos = upload.array('photos', 10); // For tweets and messages
 
 export default upload;
 
