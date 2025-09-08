@@ -24,6 +24,7 @@ export const authenticateUser = async (payload) =>
         id: user.id,
         email: user.email,
         role: user.role,
+
     });
 
 }

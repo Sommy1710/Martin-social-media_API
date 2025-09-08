@@ -18,7 +18,7 @@ export const addCommentToTweet = async (req, res, next) => {
         }
         const comment = await Comment.create({
             tweetId,
-            author: value.author,
+            author: req.user.id,
             content: value.content
         });
         tweet.comments.push(comment._id);
