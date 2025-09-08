@@ -59,6 +59,8 @@ POST /api/v1/auth/login — Authenticate user
 GET /api/v1/auth/search - Search for users by username
 GET /api/v1/auth/user - Get authenticated user
 POST /api/v1/auth/logout - log out a user
+DELETE /api/v1/auth/user/user:Id - only admins and owner of an account can delete that account
+
 
 Tweets
 

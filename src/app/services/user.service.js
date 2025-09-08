@@ -1,4 +1,4 @@
-import {ConflictError} from '../../lib/error-definitions.js';
+import {ConflictError, NotFoundError} from '../../lib/error-definitions.js';
 import {User} from '../schema/user.schema.js';
 
 export const createUser = async(payload) =>
@@ -28,4 +28,14 @@ export const getUserByEmail = async(email) =>
 export const getUserByRole = async(role) =>
 {
     return await User.find({role})
+}
+
+export const deleteUserById = async (userId) => {
+    const user = await User.findById(userId);
+    if (!user) {
+        throw new NotFoundError('user not found');
+    }
+
+    await user.deleteOne();
+    return {success: true, message: 'user deleted successfully'}
 }

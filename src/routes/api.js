@@ -1,5 +1,5 @@
 import {Router} from 'express';
-import {createUserAccount, getAuthenticatedUser, authenticateUser, logoutUser, searchUsers, deleteProfilePhoto} from '../app/controllers/auth.controller.js';
+import {createUserAccount, getAuthenticatedUser, authenticateUser, logoutUser, searchUsers, deleteProfilePhoto, deleteUserAccount} from '../app/controllers/auth.controller.js';
 import authMiddleware from '../app/middleware/auth.middleware.js';
 import { limiter } from '../lib/limiter.js';
 import upload from '../app/controllers/upload.js';
@@ -12,6 +12,7 @@ router.post("/login", limiter, authenticateUser);
 router.get('/search', authMiddleware, searchUsers);
 router.get("/user", authMiddleware,  getAuthenticatedUser);
 router.delete('/profile-photo', authMiddleware, deleteProfilePhoto);
+router.delete('/user/:userId', authMiddleware, deleteUserAccount)
 router.post("/logout", logoutUser);
 
 export const authRouter = router;

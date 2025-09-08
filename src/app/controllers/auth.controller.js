@@ -2,11 +2,12 @@ import * as authService from '../services/auth.service.js';
 import { asyncHandler } from '../../lib/util.js';
 import { Validator } from '../../lib/validator.js';
 import { CreateUserRequest } from '../requests/create-user.request.js';
-import {ValidationError} from "../../lib/error-definitions.js"
+import {UnauthorizedError, ValidationError} from "../../lib/error-definitions.js"
 import { AuthUserRequest } from '../requests/auth-user.request.js';
 import config from '../../config/app.config.js';
 import { User } from '../schema/user.schema.js';
 import { v2 as cloudinary } from 'cloudinary';
+import { deleteUserById } from '../services/user.service.js';
 
 
 
@@ -160,5 +161,42 @@ export const deleteProfilePhoto = asyncHandler(async (req, res) => {
   return res.status(200).json({
     success: true,
     message: 'profile photo deleted successfully'
+  });
+});
+
+/*export const deleteUserAccount = asyncHandler(async (req, res) => {
+  const {userId} = req.params
+
+  //only allow admins and super admins delete a user account
+  if (!["admin", "super admin"].includes(req.user.role)) {
+    throw new UnauthorizedError("you are not authorized to delete user accounts");
+  }
+
+  await deleteUserById(userId);
+  res.status(200).json({
+    success: true,
+    message: "user account deleted"
+  });
+});*/
+
+export const deleteUserAccount = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const requester = req.user;
+
+  // Allow if requester is admin or super admin
+  const isAdmin = ['admin', 'super admin'].includes(requester.role);
+
+  //  Allow if requester is deleting their own account
+  const isSelf = requester.id === userId;
+
+  if (!isAdmin && !isSelf) {
+    throw new UnauthorizedError("You are not authorized to delete this account");
+  }
+
+  const deleted = await deleteUserById(userId);
+
+  res.status(200).json({
+    success: true,
+    message: "User account deleted successfully"
   });
 });
