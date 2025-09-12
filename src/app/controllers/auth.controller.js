@@ -118,25 +118,6 @@ export const logoutUser = asyncHandler(async (req, res) => {
   return res.status(200).json({ success: true, message: 'User successfully logged out' });
 });
 
-export const searchUsers = asyncHandler(async (req, res) => {
-  const { keyword } = req.query;
-
-  if (!keyword) {
-    return res.status(400).json({ success: false, message: "Keyword is required" });
-  }
-
-  const users = await User.find(
-    { username: { $regex: keyword, $options: 'i' } },
-    { password: 0, role: 0, email: 0 }, // this exclude password email and role field
-  
-  );
-
-  return res.status(200).json({
-    success: true,
-    message: 'Matching users found',
-    data: users
-  });
-});
 
 export const deleteProfilePhoto = asyncHandler(async (req, res) => {
   const userId = req.user_id;

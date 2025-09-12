@@ -56,7 +56,6 @@ Auth
 
 POST /api/v1/auth/register — Create a new user
 POST /api/v1/auth/login — Authenticate user
-GET /api/v1/auth/search - Search for users by username
 GET /api/v1/auth/user - Get authenticated user
 POST /api/v1/auth/logout - log out a user
 DELETE /api/v1/auth/user/user:Id - only admins and owner of an account can delete that account
@@ -66,7 +65,7 @@ Tweets
 
 POST /api/v1/tweets/ - Create a new tweet
 GET /api/v1/tweets/ - fetch all tweets
-GET /api/v1/tweets/search - search for tweets using keywords
+GET /api/v1/tweets/search - search for tweets and users using keywords
 GET /api/v1/tweets/:id - fetch a single tweet
 DELETE /api/v1/tweets/:id - deletes a single tweet
 POST /api/v1/tweets/:tweetId/like - like/unlike a tweet
