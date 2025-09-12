@@ -8,7 +8,7 @@ export const createTweet = async (payload) => {
 /*export const getTweet = async (payload) => {
     return (payload) ? await aggregateResults(Tweet, payload) : await Tweet.find()
 };*/
-export const getTweet = async (payload = {}) => {
+/*export const getTweet = async (payload = {}) => {
   return await Tweet.find(payload)
     .populate({
       path: 'comments',
@@ -20,6 +20,22 @@ export const getTweet = async (payload = {}) => {
     })
     .populate('author', 'username')
     .sort({ createdAt: -1 });
+};*/
+
+export const getTweet = async ({ skip = 0, limit = 20, ...filters }) => {
+  return await Tweet.find(filters)
+    .populate({
+      path: 'comments',
+      select: 'content author createdAt',
+      populate: {
+        path: 'author',
+        select: 'username'
+      }
+    })
+    .populate('author', 'username')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
 };
 
 export const getTweets = async (id) => {

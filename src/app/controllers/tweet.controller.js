@@ -4,6 +4,7 @@ import {Validator} from './../../lib/validator.js';
 import { CreateTweetRequest } from '../requests/create-tweet.request.js';
 import { ValidationError } from '../../lib/error-definitions.js';
 import { Tweet } from '../schema/tweet.schema.js';
+import { User } from '../schema/user.schema.js';
 import { v2 as cloudinary } from 'cloudinary';
 import { NotFoundError, UnauthenticatedError } from '../../lib/error-definitions.js';
 
@@ -56,7 +57,7 @@ export const createNewTweet = asyncHandler(async (req, res) => {
     photos: photoUrls
   });
 });
-export const fetchAllTweets = asyncHandler(async(req, res) =>
+/*export const fetchAllTweets = asyncHandler(async(req, res) =>
 {
     const tweets = Object.entries(req.query).length >= 1
     ? await tweetService.getTweet(req.query)
@@ -70,6 +71,38 @@ export const fetchAllTweets = asyncHandler(async(req, res) =>
         }
     })
 
+});*/
+
+export const fetchAllTweets = asyncHandler(async (req, res) => {
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 20;
+  const skip = (page - 1) * limit;
+
+  // Remove pagination keys from query before passing to service
+  const filters = { ...req.query };
+  delete filters.page;
+  delete filters.limit;
+
+  const [tweets, total] = await Promise.all([
+    tweetService.getTweet({ ...filters, skip, limit }),
+    Tweet.countDocuments(filters)
+  ]);
+
+  const totalPage = Math.ceil(total / limit);
+
+  return res.status(200).json({
+    success: true,
+    message: 'tweets retrieved',
+    data: {
+      tweets,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPage
+      }
+    }
+  });
 });
 
 export const fetchTweet = asyncHandler(async(req, res) => 
@@ -168,20 +201,57 @@ export const toggleLike = async (req, res) => {
     }
 };
 
-export const searchTweets = asyncHandler(async (req, res) => {
-    const {keyword} = req.query;
 
-    if (!keyword) {
-        return res.status(400).json({success: false, message: 'keyword is required'});
+
+export const search = asyncHandler(async (req, res) => {
+  const { keyword } = req.query;
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 20;
+  const skip = (page - 1) * limit;
+
+  if (!keyword) {
+    return res.status(400).json({ success: false, message: 'keyword is required' });
+  }
+
+  // Search tweets by content
+  const tweetMatches = await Tweet.find({
+    content: { $regex: keyword, $options: 'i' }
+  }).populate('author', 'username');
+
+  // Search users by username
+  const userMatches = await User.find({
+    username: { $regex: keyword, $options: 'i' }
+  });
+
+  // Fetch tweets authored by matching users
+  const userTweets = await Tweet.find({
+    author: { $in: userMatches.map(user => user._id) }
+  }).populate('author', 'username');
+
+  // Combine and deduplicate tweets
+  const tweetMap = new Map();
+  [...tweetMatches, ...userTweets].forEach(tweet => {
+    tweetMap.set(tweet._id.toString(), tweet);
+  });
+  const combinedTweets = Array.from(tweetMap.values());
+
+  // Pagination logic
+  const total = combinedTweets.length;
+  const totalPage = Math.ceil(total / limit);
+  const paginatedTweets = combinedTweets.slice(skip, skip + limit);
+
+  return res.status(200).json({
+    success: true,
+    message: 'Matching tweets and users found',
+    data: {
+      tweets: paginatedTweets,
+      users: userMatches,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPage
+      }
     }
-
-    const tweets = await Tweet.find({
-        content: {$regex: keyword, $options: 'i'} // this is for case-insensitive search
-    }).populate('author', 'username'); // this includes username in response
-
-    return res.status(200).json({
-        success: true,
-        message: 'Matching tweets found',
-        data: tweets
-    });
+  });
 });
