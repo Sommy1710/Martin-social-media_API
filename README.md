@@ -51,6 +51,13 @@ CLOUDINARY_API_SECRET=your_cloudinary_secret
 
 npm run start:dev
 
+## Live API
+
+The backend is deployed on [Render](martin-social-media-api-8.onrender.com). You can access the live endpoints directly.
+
+Example:
+POST https://martin-social-media-api-8.onrender.com/api/v1/auth/register
+
 #### API Endpoints
 Auth
 
